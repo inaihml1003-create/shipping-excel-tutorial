@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>航运行政人员 Excel 基础资料分析：资料前处理核心技能简报</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+    
+    :root {
+      --navy-900: #0a192f;
+      --navy-800: #112240;
+      --navy-700: #1d3557;
+      --teal-500: #00a896;
+      --teal-400: #02c39a;
+      --cyan-400: #48cae4;
+      --gold-400: #f4a261;
+      --coral-500: #e76f51;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      overflow: hidden;
+      background-color: #060d17;
+      color: #e2e8f0;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Slide transition */
+    .slide-container {
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98) translateY(12px);
+      position: absolute;
+      inset: 0;
+    }
+    .slide-active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+      position: relative;
+    }
+
+    /* Custom scrollbar for tables inside slides */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(71, 85, 105, 0.8);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #00a896;
+    }
+
+    /* Glass card styles */
+    .glass-card {
+      background: rgba(17, 34, 64, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    .glass-card-hover {
+      transition: all 0.25s ease;
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(0, 168, 150, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(0, 168, 150, 0.2);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between p-3 md:p-6 bg-gradient-to-br from-[#060d17] via-[#0b1b2f] to-[#040911]">
+
+  <!-- Top Navigation Bar -->
+  <header class="flex items-center justify-between pb-3 border-b border-slate-800/80 shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#00a896] to-[#48cae4] flex items-center justify-center font-black text-slate-950 text-sm shadow-md shadow-teal-500/20">
+        🚢
+      </div>
+      <div>
+        <h1 class="text-sm md:text-base font-bold text-slate-100 flex items-center gap-2">
+          航运行政人员 Excel 基础资料分析
+          <span class="text-xs px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 hidden sm:inline-block">实务教学 PPT 简报</span>
+        </h1>
+        <p class="text-xs text-slate-400 hidden md:block">资料前处理核心技能：介面认知 • 整洁数据 • 30笔实操 • 300笔情境解题</p>
+      </div>
+    </div>
+
+    <!-- Slide Indicators & Controls -->
+    <div class="flex items-center gap-3">
+      <!-- Progress Bar -->
+      <div class="w-24 md:w-40 h-2 bg-slate-800/80 rounded-full overflow-hidden hidden sm:block border border-slate-700/50">
+        <div id="progressBar" class="h-full bg-gradient-to-r from-teal-500 to-cyan-400 transition-all duration-300" style="width: 7.7%;"></div>
+      </div>
+
+      <div class="px-2.5 py-1 rounded bg-slate-800/80 border border-slate-700/60 font-mono text-xs text-teal-300 font-semibold shadow-inner">
+        <span id="currentSlideNum">01</span> / <span id="totalSlidesNum">13</span>
+      </div>
+
+      <button id="btnOverview" onclick="toggleOverview()" title="投影片目录大纲 (M / Esc)" class="p-1.5 md:px-3 md:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition">
+        <span>📑</span> <span class="hidden md:inline">目录大纲</span>
+      </button>
+
+      <button onclick="toggleFullScreen()" title="全萤幕播放 (F)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition">
+        ⛶
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Slide Canvas -->
+  <main class="relative flex-1 w-full my-3 overflow-hidden rounded-2xl glass-card flex flex-col p-4 md:p-8">
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 1: COVER -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-active flex flex-col justify-between h-full" data-slide="1">
+      <div class="flex items-center justify-between">
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+          航运物流数字化运营系列课程
+        </span>
+        <span class="text-xs text-slate-400 font-mono">MS EXCEL 365 / 2021 / 2019</span>
+      </div>
+
+      <div class="my-auto max-w-4xl space-y-5">
+        <div class="inline-block px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 font-semibold text-xs tracking-wider uppercase">
+          Zero-to-Hero Data Preprocessing for Shipping Staff
+        </div>
+        <h2 class="text-3xl md:text-5xl font-extrabold text-white leading-tight tracking-tight">
+          航运行政人员 <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-cyan-300 to-blue-400">Excel 资料前处理</span><br>核心操作技能全景实战教学
+        </h2>
+        <p class="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
+          专为航运初学者定制！从认识 Excel 工作界面、理解整洁数据（Tidy Data）哲学，到 30 笔真实海运脏数据全流程清洗演练，再到 300 笔多场景复杂综合挑战与手把手题解。
+        </p>
+
+        <!-- Key Feature Badges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+          <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-2.5">
+            <span class="text-xl">🖥️</span>
+            <div>
+              <div class="text-xs font-bold text-slate-200">操作界面解析</div>
+              <div class="text-[11px] text-slate-400">功能区/编辑列/网格</div>
+            </div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-2.5">
+            <span class="text-xl">🧹</span>
+            <div>
+              <div class="text-xs font-bold text-slate-200">前处理基本常识</div>
+              <div class="text-[11px] text-slate-400">GIGO / 5大资料类型</div>
+            </div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-2.5">
+            <span class="text-xl">🚢</span>
+            <div>
+              <div class="text-xs font-bold text-slate-200">30笔实务示范</div>
+              <div class="text-[11px] text-slate-400">去重/分列/格式清洗</div>
+            </div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-2.5">
+            <span class="text-xl">🎯</span>
+            <div>
+              <div class="text-xs font-bold text-slate-200">300笔情境题解</div>
+              <div class="text-[11px] text-slate-400">三大业务场景考核</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-slate-800/60 text-xs text-slate-400">
+        <div>指导机构：智慧港航数字化人才教研组 • 2026 年 11 月正式版</div>
+        <div class="flex items-center gap-2">
+          <span>使用键盘左右键</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-[10px] text-teal-300">←</kbd>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-[10px] text-teal-300">→</kbd>
+          <span>翻页</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 2: AGENDA -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="2">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <span class="text-xs font-mono text-teal-400 tracking-wider">CHAPTER NAVIGATION</span>
+          <h2 class="text-2xl md:text-3xl font-extrabold text-white">教学大纲与学习路线图</h2>
+        </div>
+        <span class="text-xs text-slate-400">点击任意卡片即可快速跳至该章节</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+        <div onclick="goToSlide(3)" class="p-4 rounded-xl glass-card glass-card-hover border-l-4 border-teal-500 cursor-pointer">
+          <div class="flex items-center justify-between text-xs text-teal-300 font-mono mb-1">
+            <span>MODULE 01</span>
+            <span>投影片 03</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-1.5">第 1 章：Excel 介面全景与核心区域</h3>
+          <p class="text-xs text-slate-300 line-clamp-2">标题列、快速存取工具列、「资料」功能区群组、编辑列、名称框与初学者高频快捷键。</p>
+        </div>
+
+        <div onclick="goToSlide(4)" class="p-4 rounded-xl glass-card glass-card-hover border-l-4 border-cyan-500 cursor-pointer">
+          <div class="flex items-center justify-between text-xs text-cyan-300 font-mono mb-1">
+            <span>MODULE 02</span>
+            <span>投影片 04~05</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-1.5">第 2 章：前处理基本常识与整洁数据</h3>
+          <p class="text-xs text-slate-300 line-clamp-2">GIGO 铁律、5 大数据类型、Tidy Data 三大黄金原则与航运行政 4 类典型脏数据形态。</p>
+        </div>
+
+        <div onclick="goToSlide(6)" class="p-4 rounded-xl glass-card glass-card-hover border-l-4 border-blue-500 cursor-pointer">
+          <div class="flex items-center justify-between text-xs text-blue-300 font-mono mb-1">
+            <span>MODULE 03</span>
+            <span>投影片 06~07</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-1.5">第 3 章：30 笔实务示范全流程实操</h3>
+          <p class="text-xs text-slate-300 line-clamp-2">原始脏数据展示、体检诊断清册、10 步清洗标准流程以及交互式前后对照实验室。</p>
+        </div>
+
+        <div onclick="goToSlide(8)" class="p-4 rounded-xl glass-card glass-card-hover border-l-4 border-indigo-500 cursor-pointer">
+          <div class="flex items-center justify-between text-xs text-indigo-300 font-mono mb-1">
+            <span>MODULE 04</span>
+            <span>投影片 08~09</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-1.5">第 4 章：关键功能选项与核心函数</h3>
+          <p class="text-xs text-slate-300 line-clamp-2">资料剖析、去重、验证、快速填入；TRIM, CLEAN, UPPER, DATE, XLOOKUP 与万能嵌套公式。</p>
+        </div>
+
+        <div onclick="goToSlide(10)" class="p-4 rounded-xl glass-card glass-card-hover border-l-4 border-purple-500 cursor-pointer">
+          <div class="flex items-center justify-between text-xs text-purple-300 font-mono mb-1">
+            <span>MODULE 05</span>
+            <span>投影片 10~11</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-1.5">第 5 章：300 笔多场景练习与题解</h3>
+          <p class="text-xs text-slate-300 line-clamp-2">集装箱流转、运费滞期、船期准点率三大场景架构，十大挑战任务手把手题解。</p>
+        </div>
+
+        <div onclick="goToSlide(12)" class="p-4 rounded-xl glass-card glass-card-hover border-l-4 border-amber-500 cursor-pointer">
+          <div class="flex items-center justify-between text-xs text-amber-300 font-mono mb-1">
+            <span>MODULE 06</span>
+            <span>投影片 12~13</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-1.5">第 6 章：品质管控、自动化与资源</h3>
+          <p class="text-xs text-slate-300 line-clamp-2">源头表单防错、Power Query 自动化展望、航运数据处理十条铁律与随附资源下载。</p>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 flex items-center justify-between pt-3 border-t border-slate-800">
+        <span>建议学习顺序：按部就班逐步研读，配合伴随之 Excel 活页簿实操效果最佳</span>
+        <span>共 6 大模组 • 13 张投影片</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 3: CHAPTER 1 - EXCEL UI & SHORTCUTS -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="3">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-teal-400">CHAPTER 01</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">Excel 操作介面全景解析与航运行政核心工作区</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">工欲善其事，必先利其器</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 my-auto">
+        <!-- Interactive UI Components -->
+        <div class="lg:col-span-7 space-y-2.5">
+          <div class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <span>核心组件交互式点选（点击查看业务职能）：</span>
+            <span id="uiCompHint" class="text-teal-400 font-mono">当前点选：功能区「资料」标签</span>
+          </div>
+
+          <div class="rounded-xl border border-slate-700 bg-slate-900/90 p-3 space-y-2 text-xs">
+            <!-- Simulated Ribbon -->
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-[11px]">
+              <span class="text-slate-400 font-mono">快速存取工具列 [ 💾 ↩ ↪ ]</span>
+              <span class="font-bold text-teal-400">航运资料分析_示范档.xlsx - Excel</span>
+              <span class="text-slate-500">— ❐ ✕</span>
+            </div>
+            
+            <div class="flex flex-wrap gap-1 text-[11px]">
+              <button onclick="inspectUI('tabs')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">常用 Home</button>
+              <button onclick="inspectUI('dataTab')" class="px-2 py-1 rounded bg-teal-500/20 text-teal-300 border border-teal-500/40 font-bold">资料 Data ★ 核心</button>
+              <button onclick="inspectUI('tabs')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">公式 Formulas</button>
+              <button onclick="inspectUI('tabs')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">检视 View</button>
+            </div>
+
+            <!-- Data Tab Tools -->
+            <div class="p-2 rounded bg-slate-800/80 border border-slate-700 flex flex-wrap gap-2 text-[11px]">
+              <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 cursor-pointer" onclick="inspectUI('tool_split')">资料剖析 (Text to Columns)</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 cursor-pointer" onclick="inspectUI('tool_dedup')">移除重复项 (Remove Duplicates)</span>
+              <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 cursor-pointer" onclick="inspectUI('tool_val')">资料验证 (Data Validation)</span>
+              <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 cursor-pointer" onclick="inspectUI('tool_flash')">快速填入 (Ctrl+E)</span>
+            </div>
+
+            <!-- Formula Bar -->
+            <div class="flex items-center gap-2 pt-1">
+              <span onclick="inspectUI('nameBox')" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded font-mono text-teal-300 font-bold cursor-pointer">C4</span>
+              <span class="text-slate-500 font-mono font-bold">fx</span>
+              <input type="text" readonly value="=TRIM(CLEAN(UPPER(B4)))" onclick="inspectUI('formulaBar')" class="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 font-mono-code text-cyan-300 text-[11px] cursor-pointer" />
+            </div>
+
+            <!-- Grid Sample -->
+            <div class="rounded border border-slate-800 overflow-hidden text-[11px]">
+              <div class="grid grid-cols-4 bg-slate-800/70 p-1 font-bold text-slate-300">
+                <div>A (提单号)</div>
+                <div>B (集装箱号)</div>
+                <div>C (清洗后)</div>
+                <div>D (海运费USD)</div>
+              </div>
+              <div class="grid grid-cols-4 p-1 bg-slate-900/50 border-t border-slate-800 font-mono">
+                <div class="text-red-400"> COSU6291 </div>
+                <div>cosu9823145</div>
+                <div class="text-teal-300 font-bold">COSU9823145</div>
+                <div>$2,450.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Component Explanation Box -->
+          <div id="uiDescBox" class="p-2.5 rounded-lg bg-teal-950/40 border border-teal-500/30 text-xs text-teal-200">
+            <span class="font-bold text-teal-300">【资料 (Data) 标签页】：</span> 航运数据清洗的主战场！其下辖的「资料工具」群组集成了资料剖析、去重、资料验证等最核心的前处理功能。
+          </div>
+        </div>
+
+        <!-- High-frequency Shortcuts -->
+        <div class="lg:col-span-5 space-y-2">
+          <div class="text-xs font-semibold text-slate-300">航运行政高频快捷键速查（必备肌肉记忆）：</div>
+          
+          <div class="space-y-1.5 custom-scroll max-h-[300px] overflow-y-auto pr-1">
+            <div class="p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">Ctrl + Shift + ↓ / →</div>
+                <div class="text-[11px] text-slate-400">瞬间全选整列/整行连续数据</div>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20">选数神器</span>
+            </div>
+
+            <div class="p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">Ctrl + E</div>
+                <div class="text-[11px] text-slate-400">快速填入 (Flash Fill) 模式识别</div>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">智慧拆分</span>
+            </div>
+
+            <div class="p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">Ctrl + H</div>
+                <div class="text-[11px] text-slate-400">寻找及取代 (批量清除字符)</div>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">批量替换</span>
+            </div>
+
+            <div class="p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">Ctrl + 1</div>
+                <div class="text-[11px] text-slate-400">开启储存档格式详细设定视窗</div>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">格式定义</span>
+            </div>
+
+            <div class="p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">F4 键</div>
+                <div class="text-[11px] text-slate-400">切换公式绝对引用 ($A$1) 或重复动作</div>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">锁定码表</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>💡 提醒：在海量舱单数据中，严禁使用滑鼠长距离拖曳选区，请养成「Ctrl+Shift+方向键」选取的习惯。</span>
+        <span class="text-teal-400 font-mono">Section 1.3 - 1.4</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 4: CHAPTER 2 - GIGO & 5 DATA TYPES -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="4">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-cyan-400">CHAPTER 02</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">资料前处理核心常识：GIGO 铁律与五大资料类型</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-300 border border-red-500/30">Garbage In, Garbage Out</span>
+      </div>
+
+      <div class="my-auto space-y-4">
+        <!-- GIGO concept banner -->
+        <div class="p-3.5 rounded-xl bg-gradient-to-r from-red-950/40 via-slate-900/60 to-slate-900/60 border border-red-500/30 flex items-center gap-3">
+          <span class="text-3xl">⚠️</span>
+          <div class="text-xs">
+            <span class="font-bold text-red-300 text-sm">GIGO 原则（垃圾进，垃圾出）：</span>
+            <span class="text-slate-300">如果输入的航运数据源存在前后空格、格式混杂或重复录入，任何精巧的公式与透视表都将得出<strong class="text-white">致命的虚假结论</strong>。前处理是确保海运运费结算与报关零事故的第一道生命线。</span>
+          </div>
+        </div>
+
+        <!-- 5 Data Types Interactive Table -->
+        <div class="overflow-x-auto rounded-xl border border-slate-700/80 bg-slate-900/80">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-800/90 text-slate-300 border-b border-slate-700">
+              <tr>
+                <th class="p-2.5 font-bold">资料类型</th>
+                <th class="p-2.5 font-bold">预设对齐</th>
+                <th class="p-2.5 font-bold">航运单证对应示例</th>
+                <th class="p-2.5 font-bold">初学者常见误区与严重后果</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-300">
+              <tr class="hover:bg-slate-800/40">
+                <td class="p-2.5 font-bold text-blue-400">文字 (Text)</td>
+                <td class="p-2.5 font-mono text-slate-400">靠左对齐</td>
+                <td class="p-2.5">提单号 COSU6291、箱型 40HC、代码 CNSHA</td>
+                <td class="p-2.5 text-red-300/90">将前导零数字提单（如 001284）作为数值储存，导致开头的 '0' 被系统吞噬。</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="p-2.5 font-bold text-emerald-400">数值 (Number)</td>
+                <td class="p-2.5 font-mono text-slate-400">靠右对齐</td>
+                <td class="p-2.5">毛重 18450、海运费 2450.00、计费吨 32.5</td>
+                <td class="p-2.5 text-red-300/90">在单元格内手打单位「18450 kg」，导致转为纯文字，SUM 无法求和报 0！</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="p-2.5 font-bold text-teal-400">日期/时间 (Date)</td>
+                <td class="p-2.5 font-mono text-slate-400">靠右对齐</td>
+                <td class="p-2.5">开航日 ETD (2026-11-05)、截关 12:00</td>
+                <td class="p-2.5 text-red-300/90">输入「2026.11.05」或「20261105」，系统视为文字，日期相减计算航程天数直接报错。</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="p-2.5 font-bold text-purple-400">逻辑值 (Boolean)</td>
+                <td class="p-2.5 font-mono text-slate-400">置中对齐</td>
+                <td class="p-2.5">TRUE (海关已放行) / FALSE (查验扣留)</td>
+                <td class="p-2.5 text-red-300/90">输入带引号的文字 "TRUE"，导致 IF 条件判断逻辑无法精确判定。</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="p-2.5 font-bold text-amber-400">公式与错误值</td>
+                <td class="p-2.5 font-mono text-slate-400">依结果</td>
+                <td class="p-2.5">=SUM(...)、#N/A、#VALUE!、#DIV/0!</td>
+                <td class="p-2.5 text-red-300/90">未以 IFERROR 捕获错误，带错误值的报表交付客户或上级导致信任危机。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>💡 快速判定秘诀：在未经手动设置对齐时，靠左的是文字，靠右的是真正的数值与日期！</span>
+        <span class="text-cyan-400 font-mono">Section 2.1 - 2.2</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 5: CHAPTER 2 - TIDY DATA PRINCIPLES -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="5">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-cyan-400">CHAPTER 02</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">整洁数据规范 (Tidy Data) 与航运典型脏污形态</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/30">Codd & Wickham 黄金法则</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto">
+        <!-- Messy Data Card -->
+        <div class="p-4 rounded-xl bg-red-950/20 border border-red-500/30 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-red-400 flex items-center gap-1.5">
+              <span>❌</span> 常见航运混乱结构 (Messy Data)
+            </span>
+            <span class="text-[10px] text-red-300/80">透视表与公式杀手</span>
+          </div>
+          <ul class="text-xs text-slate-300 space-y-1.5">
+            <li class="flex items-start gap-1.5">
+              <span class="text-red-400 font-bold">•</span>
+              <span><strong>多行大表头与跨行跨列合并：</strong>例如将「上海港直航组」合并横跨 10 行，破坏二阶关系矩阵。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-red-400 font-bold">•</span>
+              <span><strong>复合含义栏位挤在同一格：</strong>如「EVER GIVEN/0118E」或「TEMU192830(40HC)」，不便独立统计。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-red-400 font-bold">•</span>
+              <span><strong>中间穿插小计行与空白行：</strong>如「本港小计 12 柜」，导致建立数据透视表时数值被重复加总算两次！</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-red-400 font-bold">•</span>
+              <span><strong>数值夹带文字单位：</strong>如「$2300 含打托费」，无法进行数学运算。</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tidy Data Card -->
+        <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <span>✅</span> 标准整洁航运结构 (Tidy Data)
+            </span>
+            <span class="text-[10px] text-emerald-300/80">自动化分析基石</span>
+          </div>
+          <ul class="text-xs text-slate-300 space-y-1.5">
+            <li class="flex items-start gap-1.5">
+              <span class="text-emerald-400 font-bold">•</span>
+              <span><strong>规则一：每一列 (Column) 唯一变量：</strong>装运港独占一列、目的港独占一列、船名与航次独立分列。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-emerald-400 font-bold">•</span>
+              <span><strong>规则二：每一行 (Row) 唯一运输事件：</strong>单行记录单一提单或单只集装箱，具备清晰主键。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-emerald-400 font-bold">•</span>
+              <span><strong>规则三：表头单一规范、连续矩形网格：</strong>第一行仅包含简洁栏位名称，全表无任何合并储存档与小计行。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-emerald-400 font-bold">•</span>
+              <span><strong>数值与单位彻底剥离：</strong>单位一律标于表头（如「海运费 (USD)」、「毛重 (KGS)」）。</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4 Dirty Data Roots in Shipping -->
+      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs flex flex-wrap items-center justify-between gap-2">
+        <span class="font-bold text-teal-300">航运 4 大脏污根源：</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">① EDI/网页复制不可见字符 Chr(10)/Chr(160)</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">② 港口代码大小写与简称混乱 (cnsha/SHA)</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">③ 跨国日期格式混杂 (20261105 / 斜杠 / 点号)</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">④ 货代多次改单导致的幽灵重复提单</span>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>牢记：汇总统计请交给「数据透视表」，明细基础表越纯粹越好！</span>
+        <span class="text-cyan-400 font-mono">Section 2.3 - 2.4</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 6: CHAPTER 3 - 30 RECORDS WORKFLOW -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="6">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-blue-400">CHAPTER 03</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">30 笔航运实务资料档：资料前处理全流程示范</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30">实务模拟实验室</span>
+      </div>
+
+      <!-- 8-Step Preprocessing Flowchart -->
+      <div class="my-auto space-y-3">
+        <div class="text-xs font-semibold text-slate-300">标准化前处理流水线（8 步标准工序）：</div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 01</span>
+            <div class="text-xs font-bold text-white my-1">建立副本与备份</div>
+            <div class="text-[11px] text-slate-400">复制一份原始工作表，严禁在唯一数据源直接破坏性编辑。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 02</span>
+            <div class="text-xs font-bold text-white my-1">双主键精准去重</div>
+            <div class="text-[11px] text-slate-400">勾选「提单号+柜号」，精准剔除 2 笔完全重复单证。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 03</span>
+            <div class="text-xs font-bold text-white my-1">文本与大小写清洗</div>
+            <div class="text-[11px] text-slate-400">套用 TRIM+CLEAN+UPPER 清洗前后空格与转为大写。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 04</span>
+            <div class="text-xs font-bold text-white my-1">资料剖析复合栏</div>
+            <div class="text-[11px] text-slate-400">以斜杠 '/' 分割「船名航次」，拆解为独立两栏。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 05</span>
+            <div class="text-xs font-bold text-white my-1">日期标准化转换</div>
+            <div class="text-[11px] text-slate-400">以 DATEVALUE 替换点号与斜杠，统一规范为系统短日期。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 06</span>
+            <div class="text-xs font-bold text-white my-1">剥离单位与数值化</div>
+            <div class="text-[11px] text-slate-400">SUBSTITUTE 剔除 'kg'、'$'，VALUE 转为可求和数字。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 07</span>
+            <div class="text-xs font-bold text-white my-1">XLOOKUP 匹配码表</div>
+            <div class="text-[11px] text-slate-400">关联港口参照表，将 CNSHA 自动补全为「上海港」。</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex flex-col justify-between">
+            <span class="text-teal-400 font-mono text-[10px] font-bold">STEP 08</span>
+            <div class="text-xs font-bold text-white my-1">选择性贴上为值</div>
+            <div class="text-[11px] text-slate-400">复制全表【仅贴上数值】，切断动态公式，固化成果。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>示范数据来源于伴随教学档《航运资料前处理_30笔示范档.xlsx》</span>
+        <span class="text-blue-400 font-mono">Section 3.1 - 3.3</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 7: CHAPTER 3 - BEFORE VS AFTER COMPARISON LAB -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="7">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-blue-400">CHAPTER 03</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">30 笔数据清洗前后对照实验室 (Before vs After)</h2>
+        </div>
+        <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700 text-xs">
+          <button id="btnTabBefore" onclick="switchLabTab('before')" class="px-2.5 py-1 rounded font-bold bg-red-500/20 text-red-300 border border-red-500/40">原始脏数据 (30笔)</button>
+          <button id="btnTabAfter" onclick="switchLabTab('after')" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-white">清洗后标准数据 (28笔)</button>
+        </div>
+      </div>
+
+      <!-- Comparison Metrics Banner -->
+      <div class="grid grid-cols-4 gap-2 text-center text-xs my-2">
+        <div class="p-2 rounded bg-slate-900 border border-slate-800">
+          <div class="text-[11px] text-slate-400">有效单证行数</div>
+          <div class="text-base font-bold text-white"><span id="metricRows">30</span> 笔 <span class="text-xs text-red-400 font-normal" id="metricRowsSub">(含2笔重复)</span></div>
+        </div>
+        <div class="p-2 rounded bg-slate-900 border border-slate-800">
+          <div class="text-[11px] text-slate-400">运费字段求和状态</div>
+          <div class="text-base font-bold text-white" id="metricSum"><span class="text-red-400">无法求和 (文本)</span></div>
+        </div>
+        <div class="p-2 rounded bg-slate-900 border border-slate-800">
+          <div class="text-[11px] text-slate-400">日期格式合规率</div>
+          <div class="text-base font-bold text-white" id="metricDate"><span class="text-amber-400">33% (多格式错乱)</span></div>
+        </div>
+        <div class="p-2 rounded bg-slate-900 border border-slate-800">
+          <div class="text-[11px] text-slate-400">港口中文解析</div>
+          <div class="text-base font-bold text-white" id="metricPort"><span class="text-red-400">未解析 (仅代码)</span></div>
+        </div>
+      </div>
+
+      <!-- Data Table Display -->
+      <div class="flex-1 overflow-x-auto overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 custom-scroll">
+        <table class="w-full text-left text-[11px] whitespace-nowrap">
+          <thead id="labThead" class="bg-slate-800 text-slate-300 sticky top-0 border-b border-slate-700">
+            <!-- Rendered by JS -->
+          </thead>
+          <tbody id="labTbody" class="divide-y divide-slate-800 font-mono">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span id="labFooterNote">⚠️ 脏数据高亮展示：红字代表夹带多余空格、伪数值文本与人为重复录入</span>
+        <span class="text-blue-400 font-mono">Section 3.4</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 8: CHAPTER 4 - EXCEL CORE FUNCTIONS -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="8">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-indigo-400">CHAPTER 04</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">资料前处理功能选项深度操作攻略</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">无需复杂代码的杀手锏</span>
+      </div>
+
+      <!-- 4 Core Feature Tabs -->
+      <div class="my-auto space-y-3">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <button onclick="showFeatureTab('split')" id="ftBtn-split" class="p-2 rounded-lg text-xs font-bold border transition bg-indigo-600/30 text-indigo-300 border-indigo-500">1. 资料剖析 (分列)</button>
+          <button onclick="showFeatureTab('dedup')" id="ftBtn-dedup" class="p-2 rounded-lg text-xs font-bold border transition bg-slate-800/80 text-slate-400 border-slate-700">2. 移除重复项</button>
+          <button onclick="showFeatureTab('valid')" id="ftBtn-valid" class="p-2 rounded-lg text-xs font-bold border transition bg-slate-800/80 text-slate-400 border-slate-700">3. 资料验证 (下拉)</button>
+          <button onclick="showFeatureTab('flash')" id="ftBtn-flash" class="p-2 rounded-lg text-xs font-bold border transition bg-slate-800/80 text-slate-400 border-slate-700">4. 快速填入 (Ctrl+E)</button>
+        </div>
+
+        <!-- Dynamic Content Box -->
+        <div id="featureContentBox" class="p-4 rounded-xl bg-slate-900/90 border border-slate-700/80 space-y-3 min-h-[220px]">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>建议：熟练掌握这四大功能按键，可解决 70% 以上的日常单证拆分与规范问题。</span>
+        <span class="text-indigo-400 font-mono">Section 4.1</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 9: CHAPTER 4 - CLEANING FORMULAS & NESTED TEMPLATES -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="9">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-indigo-400">CHAPTER 04</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">资料清洗核心函数公式武器库与万能嵌套模板</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/30">自动化清洗神咒</span>
+      </div>
+
+      <div class="my-auto space-y-3">
+        <!-- 3 Universal Nested Templates with Copy buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-700/80 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-300">① 航运文本降魔神咒</span>
+              <button onclick="copyFormula(this, '=TRIM(CLEAN(UPPER(SUBSTITUTE(A2, CHAR(160), &quot;&quot;))))')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-teal-500/20 text-slate-300 hover:text-teal-300 border border-slate-700">复制</button>
+            </div>
+            <div class="p-1.5 rounded bg-slate-950 font-mono-code text-[11px] text-cyan-300 break-all select-all border border-slate-800">
+              =TRIM(CLEAN(UPPER(SUBSTITUTE(A2, CHAR(160), ""))))
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">彻底清除网页导出的 Chr(160) 不间断空格、隐藏控制符与前后多余空格，并统一为大写。</p>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-700/80 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-cyan-300">② 混杂文本日期强力归一</span>
+              <button onclick="copyFormula(this, '=IF(ISNUMBER(A2), A2, DATEVALUE(SUBSTITUTE(SUBSTITUTE(A2, &quot;.&quot;, &quot;-&quot;), &quot;/&quot;, &quot;-&quot;)))')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700">复制</button>
+            </div>
+            <div class="p-1.5 rounded bg-slate-950 font-mono-code text-[11px] text-cyan-300 break-all select-all border border-slate-800">
+              =IF(ISNUMBER(A2), A2, DATEVALUE(SUBSTITUTE(SUBSTITUTE(A2, ".", "-"), "/", "-")))
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">兼容点号「2026.11.05」与斜杠「2026/11/05」，无缝转换为合法系统真日期。</p>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-700/80 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-300">③ 运费金额剥离净化</span>
+              <button onclick="copyFormula(this, '=VALUE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER(A2), &quot;USD&quot;, &quot;&quot;), &quot;$&quot;, &quot;&quot;), &quot;,&quot;, &quot;&quot;))')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-slate-700">复制</button>
+            </div>
+            <div class="p-1.5 rounded bg-slate-950 font-mono-code text-[11px] text-cyan-300 break-all select-all border border-slate-800">
+              =VALUE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER(A2), "USD", ""), "$", ""), ",", ""))
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">剔除运费中的「$」、「USD」与千分位逗号，转化为真正可直接求和的纯数字。</p>
+          </div>
+        </div>
+
+        <!-- Single formulas matrix -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
+          <div class="text-xs font-bold text-slate-200 mb-2">航运高频单值函数对齐矩阵：</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+            <div class="p-1.5 rounded bg-slate-800/80 border border-slate-700"><span class="font-bold text-teal-400">XLOOKUP</span>：跨表快速补全港口中文</div>
+            <div class="p-1.5 rounded bg-slate-800/80 border border-slate-700"><span class="font-bold text-blue-400">LEFT/RIGHT</span>：提取集装箱箱主4码代号</div>
+            <div class="p-1.5 rounded bg-slate-800/80 border border-slate-700"><span class="font-bold text-purple-400">IFERROR</span>：捕获 #N/A 错误并替换为友好文字</div>
+            <div class="p-1.5 rounded bg-slate-800/80 border border-slate-700"><span class="font-bold text-amber-400">MAX(CBM, KGS/1000)</span>：运费计费吨运算</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>技巧：复杂嵌套公式完成清洗后，请记得全选【选择性贴上为值】，固化数据。</span>
+        <span class="text-indigo-400 font-mono">Section 4.2 - 4.3</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 10: CHAPTER 5 - 300 RECORDS PRACTICE ARCHITECTURE -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="10">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-purple-400">CHAPTER 05</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">300 笔多场景航运综合实战练习档业务架构</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/30">实训竞技场</span>
+      </div>
+
+      <div class="my-auto space-y-4">
+        <p class="text-xs text-slate-300">
+          为了帮助航运行政人员走出「学了函数却不知道如何在复杂业务中运用」的困境，我们特别定制了 300 笔多场景练习档，涵盖三大航运管理维度：
+        </p>
+
+        <!-- 3 Business Scenarios -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-blue-500/40 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">A</span>
+              <h3 class="text-xs font-bold text-white">集装箱装箱单流转与跟踪 (100笔)</h3>
+            </div>
+            <p class="text-[11px] text-slate-400">涉及工作单号、主提单号、柜号、ISO 箱型、船东代码、铅封完整性。重点考核格式规范与主键去重。</p>
+            <div class="text-[10px] text-blue-300 bg-blue-950/40 p-1 rounded border border-blue-800">
+              重点：去重率、箱号4+7位校验、箱型大写
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-emerald-500/40 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">B</span>
+              <h3 class="text-xs font-bold text-white">海运运费与滞期费结算 (100笔)</h3>
+            </div>
+            <p class="text-[11px] text-slate-400">涉及体积 (CBM)、毛重 (KGS)、计费吨 (RT)、基础海运费、超期滞箱费 (Demurrage) 与总应收核算。</p>
+            <div class="text-[10px] text-emerald-300 bg-emerald-950/40 p-1 rounded border border-emerald-800">
+              重点：RT = MAX(CBM, KGS/1000)、货币剥离
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-amber-500/40 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">C</span>
+              <h3 class="text-xs font-bold text-white">船期准点率与港口作业 (100笔)</h3>
+            </div>
+            <p class="text-[11px] text-slate-400">涉及船名航次剖析、UN/LOCODE 码表匹配、ETD/ATD/ETA/ATA 航程运算与延误天数核算。</p>
+            <div class="text-[10px] text-amber-300 bg-amber-950/40 p-1 rounded border border-amber-800">
+              重点：计划航程 (ETA-ETD)、延误天数 MAX(0, ATA-ETA)
+            </div>
+          </div>
+        </div>
+
+        <!-- Reference Tables in Practice Workbook -->
+        <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/80 text-xs flex items-center justify-between">
+          <div class="space-y-0.5">
+            <div class="font-bold text-slate-200">内置两大权威对照表（供学员跨表 XLOOKUP 关联）：</div>
+            <div class="text-[11px] text-slate-400">① 19 个国际核心港口代码表 (UN/LOCODE)  •  ② 全球 6 大集装箱船东与联盟代码表</div>
+          </div>
+          <span class="px-2.5 py-1 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 font-mono text-[11px]">
+            附随练习档工作表 2
+          </span>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>实训档已生成至专案目录：《航运资料前处理_300笔情境练习档.xlsx》</span>
+        <span class="text-purple-400 font-mono">Section 5.1 - 5.2</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 11: CHAPTER 5 - 10 PRACTICE CHALLENGES & SOLUTIONS -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="11">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-purple-400">CHAPTER 05</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">十大核心考核任务挑战与参考题解</h2>
+        </div>
+        <span class="text-xs text-slate-400">点选左侧任务，右侧即时检视详细解题步骤与公式</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 my-auto flex-1 overflow-hidden">
+        <!-- Tasks List Selector -->
+        <div class="lg:col-span-5 space-y-1.5 custom-scroll overflow-y-auto max-h-[300px] pr-1">
+          <div onclick="selectTask(1)" id="taskItem-1" class="p-2 rounded-lg bg-teal-500/20 border border-teal-500/40 cursor-pointer">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white">任务 01：多重主键精准去重</span>
+              <span class="text-[10px] text-teal-300">10分</span>
+            </div>
+            <div class="text-[11px] text-slate-300">识别并删除 3 笔完全伪造的重复订单 (300 -> 297)</div>
+          </div>
+
+          <div onclick="selectTask(2)" id="taskItem-2" class="p-2 rounded-lg bg-slate-800/80 border border-slate-700 cursor-pointer hover:bg-slate-700/60">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white">任务 02：单证标识文本净化</span>
+              <span class="text-[10px] text-slate-400">10分</span>
+            </div>
+            <div class="text-[11px] text-slate-300">TRIM+CLEAN+UPPER 清洗提单号与集装箱号</div>
+          </div>
+
+          <div onclick="selectTask(3)" id="taskItem-3" class="p-2 rounded-lg bg-slate-800/80 border border-slate-700 cursor-pointer hover:bg-slate-700/60">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white">任务 03：复合船名航次分列</span>
+              <span class="text-[10px] text-slate-400">10分</span>
+            </div>
+            <div class="text-[11px] text-slate-300">资料剖析按斜杠 '/' 拆分「船名」与「航次」</div>
+          </div>
+
+          <div onclick="selectTask(4)" id="taskItem-4" class="p-2 rounded-lg bg-slate-800/80 border border-slate-700 cursor-pointer hover:bg-slate-700/60">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white">任务 04：港口代码补全中文</span>
+              <span class="text-[10px] text-slate-400">15分</span>
+            </div>
+            <div class="text-[11px] text-slate-300">XLOOKUP 跨表匹配《基础代码参照表》</div>
+          </div>
+
+          <div onclick="selectTask(5)" id="taskItem-5" class="p-2 rounded-lg bg-slate-800/80 border border-slate-700 cursor-pointer hover:bg-slate-700/60">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white">任务 05：四大时间栏位标准化</span>
+              <span class="text-[10px] text-slate-400">15分</span>
+            </div>
+            <div class="text-[11px] text-slate-300">ETD/ATD/ETA/ATA 统一转换为 YYYY-MM-DD</div>
+          </div>
+
+          <div onclick="selectTask(6)" id="taskItem-6" class="p-2 rounded-lg bg-slate-800/80 border border-slate-700 cursor-pointer hover:bg-slate-700/60">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white">任务 06：计费吨与运杂费总核算</span>
+              <span class="text-[10px] text-slate-400">15分</span>
+            </div>
+            <div class="text-[11px] text-slate-300">RT=MAX(CBM, KGS/1000) 与剥离货币单位</div>
+          </div>
+        </div>
+
+        <!-- Task Solution Panel -->
+        <div id="taskSolutionPanel" class="lg:col-span-7 p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-3 flex flex-col justify-between">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>全部 10 项任务标准答案请参照活页簿分页《练习题说明与考核指标》</span>
+        <span class="text-purple-400 font-mono">Section 5.3 - 5.4</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 12: CHAPTER 6 - LONG-TERM DATA QUALITY CONTROL -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="12">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <span class="text-xs font-mono text-amber-400">CHAPTER 06</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white">航运数据品质长效管控与自动化进阶建议</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">制度与技术双轮驱动</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto">
+        <!-- 3 Form Defenses -->
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+          <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+            <span>🛡️</span> 源头表单设计防错三原则
+          </div>
+          <div class="text-xs text-slate-300 space-y-2">
+            <div class="p-2 rounded bg-slate-800/60 border border-slate-700/60">
+              <span class="font-bold text-white">1. 刚性下拉选单约束：</span>
+              <p class="text-[11px] text-slate-400">对港口代码（UN/LOCODE）、箱型（ISO 6346）、船东代码设立「资料验证」下拉清单，杜绝自由手打乱拼。</p>
+            </div>
+            <div class="p-2 rounded bg-slate-800/60 border border-slate-700/60">
+              <span class="font-bold text-white">2. 字数与格式掩码阻断：</span>
+              <p class="text-[11px] text-slate-400">集装箱号强制限定 11 位，前 4 位必须为字母，未符合格式者系统直接跳出弹跳警告阻止提交。</p>
+            </div>
+            <div class="p-2 rounded bg-slate-800/60 border border-slate-700/60">
+              <span class="font-bold text-white">3. 拥抱 Ctrl+T 格式化表格：</span>
+              <p class="text-[11px] text-slate-400">将连续数据转换为「Excel 表格」，新行自动继承所有格式、公式与验证规则。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 Golden Rules Excerpt -->
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+          <div class="text-xs font-bold text-teal-300 flex items-center gap-1.5">
+            <span>📜</span> 航运行政日常数据处理精选铁律
+          </div>
+          <div class="text-[11px] text-slate-300 space-y-1.5">
+            <div class="flex items-center gap-2"><span class="text-teal-400 font-bold">铁律 1</span> <span><strong>备份先行：</strong>原始数据永远留有纯净底稿，严禁破坏性编辑。</span></div>
+            <div class="flex items-center gap-2"><span class="text-teal-400 font-bold">铁律 2</span> <span><strong>数文分离：</strong>可计算数值格绝不附带 kg、usd 等文字单位。</span></div>
+            <div class="flex items-center gap-2"><span class="text-teal-400 font-bold">铁律 3</span> <span><strong>拒绝合并：</strong>明细表内杜绝任何跨行跨列合并储存档。</span></div>
+            <div class="flex items-center gap-2"><span class="text-teal-400 font-bold">铁律 4</span> <span><strong>连续网格：</strong>严禁插入空行隔开记录，小计交由透视表处理。</span></div>
+            <div class="flex items-center gap-2"><span class="text-teal-400 font-bold">铁律 5</span> <span><strong>固化数值：</strong>复杂公式前处理后务必【选择性贴上为值】。</span></div>
+          </div>
+
+          <!-- Power Query Automation Callout -->
+          <div class="mt-2 p-2.5 rounded-lg bg-teal-950/40 border border-teal-500/30 text-[11px] text-teal-200">
+            <span class="font-bold text-teal-300">进阶自动化展望：</span> 扎实本手册技能后，推荐进阶学习 <strong>Power Query</strong>。日后只需将船期更新文件扔进文件夹，点击【全部重新整理】即可全自动秒级清洗！
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <span>管理是预防，技术是手段；良好的表单设计比事后清洗更具价值。</span>
+        <span class="text-amber-400 font-mono">Section 6.1 - 6.3</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 13: SUMMARY & RESOURCES -->
+    <!-- ========================================================================= -->
+    <div class="slide-container slide-hidden flex flex-col justify-between h-full" data-slide="13">
+      <div class="flex items-center justify-between mb-1">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          课程总结与资源下载
+        </span>
+        <span class="text-xs text-slate-400 font-mono">SUCCESSFUL COMPLETION</span>
+      </div>
+
+      <div class="my-auto max-w-3xl space-y-4">
+        <h2 class="text-2xl md:text-4xl font-extrabold text-white">
+          恭喜完成航运 Excel 资料前处理全景培训！
+        </h2>
+        <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+          通过本手册的学习与 30 笔示范、300 笔情境挑战实操，您已完整具备了现代航运企业行政与数字化运营所需的<strong class="text-teal-300">数据清洗、标准化、跨表关联与品质管控</strong>全套核心操作技能。
+        </p>
+
+        <!-- Deliverable Links Card -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700/80 space-y-3">
+          <div class="text-xs font-bold text-slate-200">配套实体教材与活页簿本地档案：</div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div class="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>📄</span> Word 排版主教材
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">含封面、图表目录、页码与参考文献之 DOCX (1.47 MB)</div>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>📊</span> 30 笔示范档案
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">包含脏数据与清洗后标准对照 (XLSX)</div>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>🎯</span> 300 笔情境练习
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">含三大航运场景与参考题解 (XLSX)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/60 text-[11px] text-slate-400 space-y-1">
+          <div class="font-bold text-slate-300">参考文献与权威行业标准引证：</div>
+          <div>国际海事组织 IMO FAL 公约 • ISO 6346 集装箱编码规范 • 联合国 UN/LOCODE 港口代码 • Hadley Wickham Tidy Data • 微软官方知识库</div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+        <div>航运数据分析 • 赋能现代智慧港航物流供应链</div>
+        <button onclick="goToSlide(1)" class="text-teal-400 hover:text-teal-300 font-bold underline">返回封面第一页 ↺</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation Control Bar -->
+  <footer class="flex items-center justify-between pt-2 border-t border-slate-800/80 shrink-0 z-30">
+    <!-- Prev button -->
+    <button id="btnPrev" onclick="prevSlide()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700/80 flex items-center gap-2 transition disabled:opacity-40 disabled:pointer-events-none shadow-sm">
+      <span>←</span> <span>上一页 (Prev)</span>
+    </button>
+
+    <!-- Slide dots quick jump -->
+    <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5">
+      <!-- Generated via JS -->
+    </div>
+
+    <!-- Next button -->
+    <button id="btnNext" onclick="nextSlide()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 text-xs font-bold shadow-md shadow-teal-500/20 flex items-center gap-2 transition disabled:opacity-40 disabled:pointer-events-none">
+      <span>下一页 (Next)</span> <span>→</span>
+    </button>
+  </footer>
+
+  <!-- Modal: Slide Overview Grid -->
+  <div id="overviewModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 p-6 flex flex-col justify-between hidden opacity-0 transition-opacity duration-200">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+      <h3 class="text-base font-bold text-white flex items-center gap-2">
+        <span>📑</span> 投影片全景大纲一览
+      </h3>
+      <button onclick="toggleOverview()" class="p-1 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700">
+        关闭 (Esc)
+      </button>
+    </div>
+
+    <div id="overviewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 my-auto custom-scroll max-h-[75vh] overflow-y-auto p-2">
+      <!-- Injected via JS -->
+    </div>
+
+    <div class="text-xs text-slate-400 text-center pt-2 border-t border-slate-800">
+      点击任意卡片即可直接切换到该页投影片
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-teal-500 text-slate-950 text-xs font-bold shadow-lg shadow-teal-500/30 transition-all duration-300 opacity-0 pointer-events-none z-50">
+    公式已复制到剪贴簿！
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // Slides Navigation Logic
+    // -------------------------------------------------------------
+    let currentSlide = 1;
+    const totalSlides = 13;
+
+    const slideTitles = [
+      "封面：课程导引",
+      "大纲：学习路线图",
+      "第1章：Excel操作界面解析",
+      "第2章：GIGO与五大数据类型",
+      "第2章：整洁数据三原则",
+      "第3章：30笔示范清洗流程",
+      "第3章：数据清洗前后对照实验室",
+      "第4章：核心功能选项深度攻略",
+      "第4章：清洗函数与嵌套模板",
+      "第5章：300笔情境练习业务架构",
+      "第5章：十大考核任务挑战与题解",
+      "第6章：长效管控与十条铁律",
+      "总结：课程完成与资源清单"
+    ];
+
+    function updateSlideUI() {
+      // Toggle slides visibility
+      const slides = document.querySelectorAll('.slide-container');
+      slides.forEach((s) => {
+        const slideIdx = parseInt(s.getAttribute('data-slide'));
+        if (slideIdx === currentSlide) {
+          s.classList.remove('slide-hidden');
+          s.classList.add('slide-active');
+        } else {
+          s.classList.remove('slide-active');
+          s.classList.add('slide-hidden');
+        }
+      });
+
+      // Update counters
+      document.getElementById('currentSlideNum').innerText = currentSlide.toString().padStart(2, '0');
+      document.getElementById('totalSlidesNum').innerText = totalSlides.toString().padStart(2, '0');
+
+      // Update progress bar
+      const pct = (currentSlide / totalSlides) * 100;
+      document.getElementById('progressBar').style.width = pct + '%';
+
+      // Update Prev / Next buttons state
+      document.getElementById('btnPrev').disabled = (currentSlide === 1);
+      document.getElementById('btnNext').disabled = (currentSlide === totalSlides);
+
+      // Update dots
+      renderDots();
+    }
+
+    function goToSlide(n) {
+      if (n >= 1 && n <= totalSlides) {
+        currentSlide = n;
+        updateSlideUI();
+        closeOverview();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlideUI();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlideUI();
+      }
+    }
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        goToSlide(1);
+      } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+      } else if (e.key === 'Escape' || e.key.toLowerCase() === 'm') {
+        toggleOverview();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullScreen();
+      }
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function renderDots() {
+      const container = document.getElementById('slideDotsContainer');
+      container.innerHTML = '';
+      for (let i = 1; i <= totalSlides; i++) {
+        const dot = document.createElement('button');
+        dot.className = `w-2 h-2 rounded-full transition-all ${i === currentSlide ? 'w-5 bg-teal-400' : 'bg-slate-700 hover:bg-slate-500'}`;
+        dot.title = `第 ${i} 页：${slideTitles[i - 1]}`;
+        dot.onclick = () => goToSlide(i);
+        container.appendChild(dot);
+      }
+    }
+
+    // Modal Overview
+    function toggleOverview() {
+      const modal = document.getElementById('overviewModal');
+      if (modal.classList.contains('hidden')) {
+        renderOverviewGrid();
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+      } else {
+        closeOverview();
+      }
+    }
+
+    function closeOverview() {
+      const modal = document.getElementById('overviewModal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function renderOverviewGrid() {
+      const grid = document.getElementById('overviewGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= totalSlides; i++) {
+        const card = document.createElement('div');
+        const isActive = (i === currentSlide);
+        card.className = `p-3 rounded-xl border cursor-pointer transition flex flex-col justify-between h-28 ${
+          isActive 
+            ? 'bg-teal-950/60 border-teal-400 text-white shadow-md shadow-teal-500/20' 
+            : 'bg-slate-900/80 border-slate-700/80 hover:border-slate-500 text-slate-300'
+        }`;
+        card.onclick = () => goToSlide(i);
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-[11px] font-mono ${isActive ? 'text-teal-300 font-bold' : 'text-slate-400'}">
+            <span>SLIDE ${i.toString().padStart(2, '0')}</span>
+            ${isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>' : ''}
+          </div>
+          <div class="text-xs font-bold line-clamp-2 my-auto">${slideTitles[i - 1]}</div>
+          <div class="text-[10px] text-slate-500">点击跳至此页</div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    // Toast helper
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.remove('opacity-0');
+      setTimeout(() => t.classList.add('opacity-0'), 2000);
+    }
+
+    function copyFormula(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("已成功复制公式到剪贴簿！");
+        const orig = btn.innerText;
+        btn.innerText = "已复制✓";
+        btn.classList.add("text-teal-300", "bg-teal-500/20");
+        setTimeout(() => {
+          btn.innerText = orig;
+          btn.classList.remove("text-teal-300", "bg-teal-500/20");
+        }, 1500);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Slide 3 UI Inspector
+    // -------------------------------------------------------------
+    function inspectUI(type) {
+      const box = document.getElementById('uiDescBox');
+      const hint = document.getElementById('uiCompHint');
+      
+      const map = {
+        'dataTab': {
+          hint: '当前点选：功能区「资料 (Data)」标签',
+          text: '<strong>【资料 (Data) 标签页】：</strong> 航运数据清洗的主战场！其下辖的「资料工具」群组集成了资料剖析、去重、资料验证等最核心的前处理功能。'
+        },
+        'tool_split': {
+          hint: '当前点选：资料剖析 (Text to Columns)',
+          text: '<strong>【资料剖析精灵】：</strong> 针对复合栏位（如船名/航次、起运-目的港）进行精准拆分。支援「分隔符号」与「固定宽度」双模式。'
+        },
+        'tool_dedup': {
+          hint: '当前点选：移除重复项 (Remove Duplicates)',
+          text: '<strong>【移除重复项】：</strong> 航运去重利器！实务心法是【仅勾选唯一商业主键】（提单号+集装箱号），严禁全选所有栏位误删有效拼箱记录。'
+        },
+        'tool_val': {
+          hint: '当前点选：资料验证 (Data Validation)',
+          text: '<strong>【资料验证下拉清单】：</strong> 源头防错终极武器！设定来源引用《港口代码表》，强制操作员以下拉选单录入，彻底根除错别字。'
+        },
+        'tool_flash': {
+          hint: '当前点选：快速填入 (Ctrl+E)',
+          text: '<strong>【快速填入 (Ctrl+E)】：</strong> 模式识别AI神技！只需输入1个示例样本，按下 Ctrl+E，系统自动从整列杂乱文本中抽离所需数值。'
+        },
+        'nameBox': {
+          hint: '当前点选：名称框 (Name Box)',
+          text: '<strong>【名称框 (C4)】：</strong> 显示当前单元格座标。在大型数十万行舱单中，可直接输入「C100000」一秒跳至最底部；亦可定义命名范围。'
+        },
+        'formulaBar': {
+          hint: '当前点选：资料编辑列 (Formula Bar)',
+          text: '<strong>【资料编辑列 (fx)】：</strong> 透视底层真相的窗口！表面显示的格式可能是假象，在编辑列中能精准识别其究竟是纯文本、系统真日期或包含隐形字符。'
+        },
+        'tabs': {
+          hint: '当前点选：功能区标签',
+          text: '<strong>【功能区标签页 (Ribbon Tabs)】：</strong> 采用「标签 -> 群组 -> 命令」三级结构。前处理绝大部分时间聚焦于【资料】与【常用】选项卡。'
+        }
+      };
+
+      if (map[type]) {
+        hint.innerText = map[type].hint;
+        box.innerHTML = map[type].text;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Slide 7 Before/After Lab Data
+    // -------------------------------------------------------------
+    const rawData30Sample = [
+      [1, " COSU62918401 ", "cosu9823145", "40GP ", "cosco guangzhou / 042w", "CNSHA", "DEHAM", "2026-11-05", "18,450 kg", "$2,450.00", "已放行"],
+      [2, "COSU62918402", "TEMU4819201", "20gp", "EVER GIVEN/0118E", " cnsha ", "nlsrt", "2026/11/06", "12200", "USD 1200", "电放"],
+      [3, "MSCU91823711", "MSCU1928374", "40HC", "MSC OSCAR / 2603W", "CNNBO", "SGSIN", "2026.11.07", "24,100 KG", "1800", "特快"],
+      [4, "COSU62918402 (重)", "TEMU4819201", "20gp", "EVER GIVEN/0118E", " cnsha ", "nlsrt", "2026/11/06", "12200", "USD 1200", "电放"],
+      [5, "OOCL82910394", "OOCU9283019", "40hc", "OOCL POLAND / 088E", "cnsha", "USLAX", "20261108", "19800", "$3,100", "报关"],
+      [6, "CMAU28190283", "CMAU8172930", "20GP", "cma cgm marco polo/091w", "CNNBO", "FRLEH", "2026-11-09", "14500 kg", "USD 1,650", "加急"],
+      [7, "SITC28190384", "SITU9182034", "20GP", "SITC NINGBO / 2645S", "CNNBO", "JPTYO", "2026/11/15", "9800 KG", "USD 450", "直航"],
+      [8, "SITC28190384 (重)", "SITU9182034", "20GP", "SITC NINGBO / 2645S", "CNNBO", "JPTYO", "2026/11/15", "9800 KG", "USD 450", "直航"]
+    ];
+
+    const cleanData30Sample = [
+      [1, "COSU62918401", "COSU9823145", "40GP", "Cosco Guangzhou", "042W", "CNSHA", "上海港", "DEHAM", "汉堡港", "2026-11-05", "18,450", "$2,450.00", "有效"],
+      [2, "COSU62918402", "TEMU4819201", "20GP", "Ever Given", "0118E", "CNSHA", "上海港", "NLSRT", "鹿特丹港", "2026-11-06", "12,200", "$1,200.00", "有效"],
+      [3, "MSCU91823711", "MSCU1928374", "40HC", "Msc Oscar", "2603W", "CNNBO", "宁波港", "SGSIN", "新加坡港", "2026-11-07", "24,100", "$1,800.00", "有效"],
+      [4, "OOCL82910394", "OOCU9283019", "40HC", "Oocl Poland", "088E", "CNSHA", "上海港", "USLAX", "洛杉矶港", "2026-11-08", "19,800", "$3,100.00", "有效"],
+      [5, "CMAU28190283", "CMAU8172930", "20GP", "Cma Cgm Marco Polo", "091W", "CNNBO", "宁波港", "FRLEH", "勒阿弗尔", "2026-11-09", "14,500", "$1,650.00", "有效"],
+      [6, "ONEY82910283", "TGHU9182039", "40GP", "One Apus", "0064E", "CNSHA", "上海港", "USOAK", "奥克兰港", "2026-11-10", "21,000", "$2,950.00", "有效"],
+      [7, "SITC28190384", "SITU9182034", "20GP", "Sitc Ningbo", "2645S", "CNNBO", "宁波港", "JPTYO", "东京港", "2026-11-15", "9,800", "$450.00", "有效"]
+    ];
+
+    function switchLabTab(tab) {
+      const btnBefore = document.getElementById('btnTabBefore');
+      const btnAfter = document.getElementById('btnTabAfter');
+      const thead = document.getElementById('labThead');
+      const tbody = document.getElementById('labTbody');
+      const fNote = document.getElementById('labFooterNote');
+
+      if (tab === 'before') {
+        btnBefore.className = "px-2.5 py-1 rounded font-bold bg-red-500/20 text-red-300 border border-red-500/40";
+        btnAfter.className = "px-2.5 py-1 rounded font-bold text-slate-400 hover:text-white";
+        
+        document.getElementById('metricRows').innerText = "30";
+        document.getElementById('metricRowsSub').innerText = "(含2笔重复)";
+        document.getElementById('metricSum').innerHTML = '<span class="text-red-400">无法求和 (文本)</span>';
+        document.getElementById('metricDate').innerHTML = '<span class="text-amber-400">33% (多格式错乱)</span>';
+        document.getElementById('metricPort').innerHTML = '<span class="text-red-400">未解析 (仅代码)</span>';
+        fNote.innerText = "⚠️ 脏数据高亮展示：红字代表夹带多余空格、伪数值文本与人为重复录入";
+
+        thead.innerHTML = `
+          <tr>
+            <th class="p-2">序号</th>
+            <th class="p-2 text-red-400">提单号 (混空格)</th>
+            <th class="p-2 text-red-400">箱号 (小写)</th>
+            <th class="p-2">箱型</th>
+            <th class="p-2">船名航次 (未分列)</th>
+            <th class="p-2">港口 (POL/POD)</th>
+            <th class="p-2 text-amber-400">开航日 (格式混杂)</th>
+            <th class="p-2 text-red-400">毛重 (带单位)</th>
+            <th class="p-2 text-red-400">海运费 (伪数值)</th>
+            <th class="p-2">状态</th>
+          </tr>
+        `;
+
+        let rowsHtml = '';
+        rawData30Sample.forEach(r => {
+          const isDup = r[1].includes("(重)");
+          rowsHtml += `
+            <tr class="hover:bg-slate-800/40 ${isDup ? 'bg-red-950/40 text-red-300' : ''}">
+              <td class="p-2 text-slate-400">${r[0]}</td>
+              <td class="p-2 font-bold ${isDup ? 'text-red-400' : 'text-red-300'}">${r[1]}</td>
+              <td class="p-2 text-amber-200">${r[2]}</td>
+              <td class="p-2">${r[3]}</td>
+              <td class="p-2 text-slate-300">${r[4]}</td>
+              <td class="p-2">${r[5]}/${r[6]}</td>
+              <td class="p-2 text-amber-300">${r[7]}</td>
+              <td class="p-2 text-red-300">${r[8]}</td>
+              <td class="p-2 text-red-300">${r[9]}</td>
+              <td class="p-2">${r[10]}</td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = rowsHtml;
+
+      } else {
+        btnAfter.className = "px-2.5 py-1 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        btnBefore.className = "px-2.5 py-1 rounded font-bold text-slate-400 hover:text-white";
+
+        document.getElementById('metricRows').innerText = "28";
+        document.getElementById('metricRowsSub').innerText = "(剔除2笔重复)";
+        document.getElementById('metricSum').innerHTML = '<span class="text-emerald-400 font-bold">$61,250.00✓</span>';
+        document.getElementById('metricDate').innerHTML = '<span class="text-emerald-400 font-bold">100% YYYY-MM-DD</span>';
+        document.getElementById('metricPort').innerHTML = '<span class="text-emerald-400 font-bold">100% 自动补全</span>';
+        fNote.innerText = "✅ 清洗完成：数据无杂质，字段单一独立，数值与日期均转换为可计算标准格式";
+
+        thead.innerHTML = `
+          <tr>
+            <th class="p-2">标准序号</th>
+            <th class="p-2 text-emerald-400">提单号</th>
+            <th class="p-2 text-emerald-400">集装箱号</th>
+            <th class="p-2">箱型</th>
+            <th class="p-2 text-teal-300">船名</th>
+            <th class="p-2 text-teal-300">航次</th>
+            <th class="p-2">POL代码</th>
+            <th class="p-2 text-cyan-300">起运港名称</th>
+            <th class="p-2">POD代码</th>
+            <th class="p-2 text-cyan-300">目的港名称</th>
+            <th class="p-2 text-teal-300">开航日ETD</th>
+            <th class="p-2 text-right">毛重(KG)</th>
+            <th class="p-2 text-right text-emerald-400">海运费(USD)</th>
+          </tr>
+        `;
+
+        let rowsHtml = '';
+        cleanData30Sample.forEach(r => {
+          rowsHtml += `
+            <tr class="hover:bg-slate-800/40">
+              <td class="p-2 text-slate-400">${r[0]}</td>
+              <td class="p-2 font-bold text-emerald-300">${r[1]}</td>
+              <td class="p-2 font-bold text-slate-200">${r[2]}</td>
+              <td class="p-2 text-cyan-300">${r[3]}</td>
+              <td class="p-2 text-white">${r[4]}</td>
+              <td class="p-2 font-mono text-teal-300">${r[5]}</td>
+              <td class="p-2">${r[6]}</td>
+              <td class="p-2 text-cyan-200">${r[7]}</td>
+              <td class="p-2">${r[8]}</td>
+              <td class="p-2 text-cyan-200">${r[9]}</td>
+              <td class="p-2 font-mono text-teal-200">${r[10]}</td>
+              <td class="p-2 text-right">${r[11]}</td>
+              <td class="p-2 text-right font-bold text-emerald-400">${r[12]}</td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = rowsHtml;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Slide 8 Feature Tabs
+    // -------------------------------------------------------------
+    function showFeatureTab(tabKey) {
+      const keys = ['split', 'dedup', 'valid', 'flash'];
+      keys.forEach(k => {
+        const btn = document.getElementById(`ftBtn-${k}`);
+        if (k === tabKey) {
+          btn.className = "p-2 rounded-lg text-xs font-bold border transition bg-indigo-600/30 text-indigo-300 border-indigo-500";
+        } else {
+          btn.className = "p-2 rounded-lg text-xs font-bold border transition bg-slate-800/80 text-slate-400 border-slate-700 hover:text-white";
+        }
+      });
+
+      const box = document.getElementById('featureContentBox');
+      if (tabKey === 'split') {
+        box.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-indigo-300 text-sm">【资料剖析 (Text to Columns)】向导详解</span>
+            <span class="text-xs text-slate-400 font-mono">功能区【资料】->【资料剖析】</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-300">
+            <div class="p-2.5 rounded bg-slate-800/70 border border-slate-700/80 space-y-1">
+              <div class="font-bold text-white text-xs">实务情境：船名航次拆分</div>
+              <p class="text-[11px] text-slate-400">将「EVER GIVEN / 0118E」依斜杠拆分为独立两列。</p>
+              <div class="font-mono text-[11px] text-teal-300 pt-1">步骤 1: 选取分隔符号 (Delimited)</div>
+              <div class="font-mono text-[11px] text-teal-300">步骤 2: 勾选「其他 (Other)」，输入斜杠 [/]</div>
+              <div class="font-mono text-[11px] text-teal-300">步骤 3: 指定目标储存档为右侧空白列</div>
+            </div>
+            <div class="p-2.5 rounded bg-slate-800/70 border border-slate-700/80 space-y-1">
+              <div class="font-bold text-white text-xs">进阶技巧：固定宽度拆解箱号</div>
+              <p class="text-[11px] text-slate-400">集装箱号（如 COSU9823145）前 4 位恒为箱主代号。</p>
+              <div class="font-mono text-[11px] text-cyan-300 pt-1">步骤 1: 选取「固定宽度 (Fixed width)」</div>
+              <div class="font-mono text-[11px] text-cyan-300">步骤 2: 在刻度尺第 4 位处点击建立分割线</div>
+              <div class="font-mono text-[11px] text-cyan-300">一键瞬间抽离前缀 COSU 与数字 9823145！</div>
+            </div>
+          </div>
+        `;
+      } else if (tabKey === 'dedup') {
+        box.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-emerald-300 text-sm">【移除重复项 (Remove Duplicates)】精准去重心法</span>
+            <span class="text-xs text-slate-400 font-mono">功能区【资料】->【移除重复项】</span>
+          </div>
+          <div class="text-xs text-slate-300 space-y-2">
+            <div class="p-2.5 rounded bg-red-950/20 border border-red-500/30 text-[11px] text-red-200">
+              ⛔ <strong>致命误区：</strong>切忌点击「全选」所有栏位去重！在航运业务中，同一艘船、同一航线常有多票不同提单拼箱，全选去重会导致严重误删有效订单！
+            </div>
+            <div class="p-2.5 rounded bg-emerald-950/20 border border-emerald-500/30 space-y-1 text-[11px]">
+              <div class="font-bold text-emerald-300">✅ 正确心法：圈定唯一商业主键</div>
+              <p class="text-slate-300">在勾选列表中，取消全选，<strong>仅勾选【提单号 (B/L No.)】与【集装箱号 (Container No.)】</strong>。Excel 将依据这两项物流实体的物理唯一性精准识别重复记录，保障零误伤。</p>
+            </div>
+          </div>
+        `;
+      } else if (tabKey === 'valid') {
+        box.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-purple-300 text-sm">【资料验证 (Data Validation)】建立防错输入法</span>
+            <span class="text-xs text-slate-400 font-mono">功能区【资料】->【资料验证】</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-300">
+            <div class="p-2.5 rounded bg-slate-800/70 border border-slate-700/80 space-y-1 text-[11px]">
+              <div class="font-bold text-purple-300">设定步骤：限制港口/箱型下拉选项</div>
+              <div>① 选取欲限制的整列储存档区域</div>
+              <div>② 点击【资料验证】-> 允许选择<strong>「清单 (List)」</strong></div>
+              <div>③ 来源输入：<code class="text-cyan-300 font-mono">=基础代码参照表!$B$2:$B$19</code></div>
+              <div>④ 亦可直接手打输入：<code class="text-cyan-300 font-mono">20GP,40GP,40HC,45HC</code></div>
+            </div>
+            <div class="p-2.5 rounded bg-slate-800/70 border border-slate-700/80 space-y-1 text-[11px]">
+              <div class="font-bold text-white">商业成效：从源头消灭错别字</div>
+              <p class="text-slate-400">操作员输入时储存档右侧自动出现下拉箭头，杜绝将 CNSHA 拼写成 cn-sha、sha 等混乱资料，彻底免除后续清洗痛苦！</p>
+            </div>
+          </div>
+        `;
+      } else if (tabKey === 'flash') {
+        box.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-amber-300 text-sm">【快速填入 (Flash Fill - Ctrl+E)】极速模式识别</span>
+            <span class="text-xs text-slate-400 font-mono">快捷键 Ctrl + E 或【资料】->【快速填入】</span>
+          </div>
+          <div class="text-xs text-slate-300 space-y-2">
+            <p class="text-[11px] leading-relaxed">
+              Excel 内部搭载的启发式模式推断功能。当需要从不规则文本中提取特定特征时（如提取纯数字、提取国家代号），无需费心撰写复杂的嵌套公式。
+            </p>
+            <div class="p-2 rounded bg-slate-950 font-mono text-[11px] text-slate-300 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="text-slate-500">原始栏 (A2):</span> <span class="text-red-300">"COSCO GUANGZHOU / 042W"</span><br>
+                <span class="text-slate-500">手动输入第1个示例 (B2):</span> <span class="text-teal-300 font-bold">"042W"</span>
+              </div>
+              <div class="text-right">
+                <span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">按下 Ctrl + E</span>
+                <div class="text-[10px] text-slate-400 mt-1">全列自动瞬间填补完成！</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Slide 11 Practice Tasks
+    // -------------------------------------------------------------
+    const taskDetails = {
+      1: {
+        title: "任务 01：多重主键精准去重",
+        goal: "消除 3 笔完全相同的人为误录提单，记录由 300 笔收敛至 297 笔。",
+        steps: "全选资料区域 A1:V301 -> 点击【资料】->【移除重复项】-> 勾选「我的资料具有标题」-> 仅勾选「工作单号」与「主提单号」-> 确定。",
+        formula: "可结合公式 =COUNTIFS($C$2:$C$301, C2) > 1 辅助筛选检验",
+        ans: "提示成功移除 3 个重复值，保留 297 个唯一值。第 41、121、211 行数据下移。"
+      },
+      2: {
+        title: "任务 02：单证标识文本规范与箱号清洗",
+        goal: "清除提单号与集装箱号前后所有不可见空白字符，统一转换为大写代码。",
+        steps: "在辅助列套用 TRIM+CLEAN+UPPER 组合公式，双击填充柄；清洗完毕后选取该列，复制并在原列【选择性贴上为值】。",
+        formula: "=TRIM(CLEAN(UPPER(D2)))",
+        ans: "提单号与柜号全部转为规范大写（如 COSU1029384），无任何残留空格。"
+      },
+      3: {
+        title: "任务 03：复合船名航次分列拆解",
+        goal: "将挤在同格的「中远海运探索号 / 421W」拆分为独立的船名与航次两列。",
+        steps: "在 H 列右侧插入 2 个空白列 -> 选中 H 列 -> 点击【资料剖析】-> 分隔符号勾选「其他」，输入斜杠 [/] -> 目标储存档选择新插入列 -> 完成。",
+        formula: "公式辅助法：=TRIM(LEFT(H2, FIND(\"/\", H2)-1))  与  =TRIM(MID(H2, FIND(\"/\", H2)+1, 20))",
+        ans: "成功拆分出「中远海运探索号」与「421W」两栏单一属性变量。"
+      },
+      4: {
+        title: "任务 04：港口代码自动关联补全中文名称",
+        goal: "将 UN/LOCODE（如 CNSHA、DEHAM）自动转换为「上海港」、「汉堡港」。",
+        steps: "在装运港右侧插入「装运港名称」列，调用 XLOOKUP 函数跨表比对分页《基础代码参照表》。",
+        formula: "=XLOOKUP(TRIM(UPPER(I2)), 基础代码参照表!$B$2:$B$19, 基础代码参照表!$C$2:$C$19, \"未知港口\")",
+        ans: "全部 297 笔记录成功解析出规范中文港名，无 #N/A 错误。"
+      },
+      5: {
+        title: "任务 05：四大时间栏位标准化与航程运算",
+        goal: "将 4 种混杂格式（2026.11.05 / 20261105 / 斜杠）归一化为短日期 YYYY-MM-DD，计算计划航程。",
+        steps: "使用嵌套 SUBSTITUTE 替换点号与斜杠后套用 DATEVALUE；新建计划航程列输入日期减法公式并设为数值。",
+        formula: "计划航程天数公式：=ETA列 - ETD列  |  延误天数公式：=MAX(0, ATA列 - ETA列)",
+        ans: "平均计划航程约为 23.5 天；若实际到港日晚于 ETA，延误天数返回实际超期天数。"
+      },
+      6: {
+        title: "任务 06：计费吨与运杂费总额结算",
+        goal: "剔除文本单位字符，按 MAX(CBM, KGS/1000) 计算计费吨，核算应收总额。",
+        steps: "使用 VALUE(SUBSTITUTE(...)) 剥离 KGS 与货币符号；计费吨输入 MAX 比较公式；总费用 = 基础运费 + 超期滞箱费。",
+        formula: "=MAX(CBM列, ROUND(KGS列 / 1000, 2))  |  总额：=基础海运费 + 滞箱费",
+        ans: "297 笔有效业务应收总费用公式 =SUM(总费用列)，标准总金额约为 $445,000.00 左右。"
+      }
+    };
+
+    function selectTask(id) {
+      for (let i = 1; i <= 6; i++) {
+        const item = document.getElementById(`taskItem-${i}`);
+        if (item) {
+          if (i === id) {
+            item.className = "p-2 rounded-lg bg-teal-500/20 border border-teal-500/40 cursor-pointer";
+            item.querySelector('span:first-child').className = "font-bold text-white";
+          } else {
+            item.className = "p-2 rounded-lg bg-slate-800/80 border border-slate-700 cursor-pointer hover:bg-slate-700/60";
+            item.querySelector('span:first-child').className = "font-bold text-slate-300";
+          }
+        }
+      }
+
+      const p = document.getElementById('taskSolutionPanel');
+      const d = taskDetails[id] || taskDetails[1];
+      p.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h4 class="text-sm font-bold text-teal-300">${d.title}</h4>
+            <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-teal-400 font-mono">TASK 0${id}</span>
+          </div>
+          <div class="text-xs text-slate-300 space-y-1.5">
+            <div><strong class="text-white">【考核目标】：</strong> ${d.goal}</div>
+            <div><strong class="text-white">【滑鼠步骤】：</strong> ${d.steps}</div>
+            <div class="pt-1"><strong class="text-teal-300">【参考核心公式】：</strong></div>
+            <div class="p-2 rounded bg-slate-950 font-mono-code text-[11px] text-cyan-300 break-all select-all border border-slate-800">
+              ${d.formula}
+            </div>
+          </div>
+        </div>
+        <div class="p-2 rounded bg-emerald-950/30 border border-emerald-500/30 text-[11px] text-emerald-300">
+          <strong>【标准校验结果】：</strong> ${d.ans}
+        </div>
+      `;
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSlideUI();
+      switchLabTab('before');
+      showFeatureTab('split');
+      selectTask(1);
+    });
+  </script>
+</body>
+</html>
