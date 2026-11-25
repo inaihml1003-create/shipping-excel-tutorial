@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+fix_fonts.py
+test_docx.py
